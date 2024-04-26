@@ -1,23 +1,40 @@
-// let a = [1, 2 , 'Hello', 7, 8, 9];
-// console.log(a.length);
-// for (let i = 0; i < a.length; i++) {
-//     console.log(a[i]);
-// }
+let express = require("express");
+let app = express();
+// Имя папки это паблик
+app.use(express.static('public'));
 
-const http = require('http');
+app.set('view engine', 'pug');
 
-// http.createServer().listen(3000);
-http.createServer(function (request, response) {
-    console.log(request.url);
-    console.log(request.method);
-    console.log(request.headers['user-agent']);
+let mysql = require('mysql');
 
-    response.setHeader("Content-Type", "text/html; charset=utf-8;")
+let con = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: 'password',
+    database: 'market',
+});
 
-    if (request.url == '/') {
-        response.end('Main <b> HELLO </b>');
-    }
-    else if (request.url == '/cat') {
-        response.end('Category');
-    }
-}).listen(3000);
+app.listen(3000, function(){
+    console.log('node express work on 3000')
+});
+
+app.get('/', function(req, res) {
+    con.query(
+        'SELECT * FROM goods',
+        function(error, result){
+            if (error) throw err;
+            // console.log(result);
+            let goods = {};
+            for (let i = 0; i < result.length; i++){
+              goods[result[i]['id']] = result[i];
+            }
+            // console.log(goods);
+            console.log(JSON.parse(JSON.stringify(goods)));
+            res.render('main', {
+                foo : 'hello',
+                bar: 7,
+                goods: JSON.parse(JSON.stringify(goods)),
+            });
+        }
+    );
+});
